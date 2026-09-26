@@ -11,7 +11,11 @@ JOINT_NAME = "leg_front_l_3"
 ####
 ####
 KP = 0.0  # YOUR KP VALUE
+# step 4: KP = 2.0
+# step 6: KP = 0.5
 KD = 0.0  # YOUR KD VALUE
+# step 4: KD = 0.3
+# step 6: KD = 0.1
 ####
 ####
 LOOP_RATE = 200  # Hz
@@ -37,23 +41,30 @@ class JointStateSubscriber(Node):
         self.target_joint_pos = 0
         self.target_joint_vel = 0
         # self.torque_history = deque(maxlen=DELAY)
+        # step 7: self.delay_steps = 5
+        # step 7: self.angle_buffer = deque(maxlen=self.delay_steps + 1)
+        # step 7: self.velocity_buffer = deque(maxlen=self.delay_steps + 1)
 
         # Create a timer to run control_loop at the specified frequency
         self.create_timer(1.0 / LOOP_RATE, self.control_loop)
 
     def get_target_joint_info(self):
         ####
-        #### YOUR CODE HERE
+        return 0.0, 0.0
         ####
 
+        # step 8: return np.sin(time.time()), np.cos(time.time())
         # target_joint_pos, target_joint_vel
         return 0, 0
 
     def calculate_torque(self, joint_pos, joint_vel, target_joint_pos, target_joint_vel):
         ####
-        #### YOUR CODE HERE
+        if joint_pos < target_joint_pos:
+            return MAX_TORQUE
+        return -MAX_TORQUE
+        #step 4: return KP * (target_joint_pos - joint_pos)
+        #step 5: return KP * (target_joint_pos - joint_pos) + KD * (target_joint_vel - joint_vel)
         ####
-        
         return 0.0
 
     def print_info(self):
@@ -79,6 +90,10 @@ class JointStateSubscriber(Node):
     def control_loop(self):
         """Control control loop to calculate and publish torque commands"""
         self.target_joint_pos, self.target_joint_vel = self.get_target_joint_info()
+        # step 7: self.angle_buffer.append(self.joint_pos)
+        # step 7: self.velocity_buffer.append(self.joint_vel)
+        # step 7: delayed_pos = self.angle_buffer[0]
+        # step 7: delayed_vel = self.velocity_buffer[0]
         self.calculated_torque = self.calculate_torque(
             self.joint_pos, self.joint_vel, self.target_joint_pos, self.target_joint_vel
         )
