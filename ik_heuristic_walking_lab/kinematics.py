@@ -16,36 +16,194 @@ import numpy as np
 
 
 class LegKinematics:
-    ################################################################################################
-    # TODO 1: Paste your rotation_x, rotation_y, rotation_z, translation, fk_front_left,
-    # fk_front_right, fk_back_left, and fk_back_right methods from lab 2's
-    # forward_kinematics.py over the stubs below. The names and arguments match lab 2, so they
-    # should paste in unchanged.
-    ################################################################################################
 
     def rotation_x(self, angle):
-        raise NotImplementedError()
+        # rotation about the x-axis implemented for you
+        return np.array(
+            [
+                [1, 0, 0, 0],
+                [0, np.cos(angle), -np.sin(angle), 0],
+                [0, np.sin(angle), np.cos(angle), 0],
+                [0, 0, 0, 1],
+            ]
+        )
 
     def rotation_y(self, angle):
-        raise NotImplementedError()
+        return np.array(
+            [
+                [np.cos(angle), 0, np.sin(angle), 0],
+                [0, 1, 0, 0],
+                [-np.sin(angle), 0, np.cos(angle), 0],
+                [0, 0, 0, 1],
+            ]
+        )
 
     def rotation_z(self, angle):
-        raise NotImplementedError()
+        return np.array(
+            [
+                [np.cos(angle), -np.sin(angle), 0, 0],
+                [np.sin(angle), np.cos(angle), 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+            ]
+        )
 
     def translation(self, x, y, z):
-        raise NotImplementedError()
+        return np.array(
+            [
+                [1, 0, 0, x],
+                [0, 1, 0, y],
+                [0, 0, 1, z],
+                [0, 0, 0, 1],
+            ]
+        )
+
+    ######################## Per-leg forward kinematics ########################
+    #
+    # Each function takes the three joint angles of one leg (hip abduction/adduction,
+    # hip flexion/extension, knee) and returns the position of that leg's end effector
+    # (the foot) as a 3-vector in the base_link frame.
+    #
+    # Hip motor (joint 1) positions in base_link, as in the lab diagrams. Each is
+    # followed by the 0.039 offset from motor 1 to motor 2, expressed in the frame
+    # of motor 1 (see the leg_front_l_1 -> leg_front_l_2 diagram).
+    #
+    #   leg        x        y
+    #   front_l   +0.07500  +0.04450
+    #   front_r   +0.07500  -0.04450
+    #   back_l    -0.07500  +0.03350
+    #   back_r    -0.07500  -0.03350
+    #
+    # The right legs are mirror images of the left legs. Move each leg by hand and check
+    # that its marker follows the foot to verify your transforms.
 
     def fk_front_left(self, theta1, theta2, theta3):
-        raise NotImplementedError()
+        rotation_x, rotation_y, rotation_z, translation = (
+            self.rotation_x,
+            self.rotation_y,
+            self.rotation_z,
+            self.translation,
+        )
+
+        ############# Motor conventions according to slides #########
+
+        # T_0_1 (base_link to leg_front_l_1)
+        T_0_1 = (
+            translation(0.07500, 0.04450, 0) @ rotation_x(1.57080) @ rotation_z(-theta1)
+        )
+
+        # T_1_2 (leg_front_l_1 to leg_front_l_2)
+        T_1_2 = translation(0, 0, -0.039) @ rotation_y(-1.57080) @ rotation_z(theta2)
+
+        # T_2_3 (leg_front_l_2 to leg_front_l_3)
+        T_2_3 = (
+            translation(0, -0.0494, 0.0685) @ rotation_y(1.57080) @ rotation_z(-theta3)
+        )
+
+        # T_3_ee (leg_front_l_3 to end-effector)
+        T_3_ee = translation(0.06231, -0.06216, -0.018)
+
+        T_0_ee = T_0_1 @ T_1_2 @ T_2_3 @ T_3_ee
+
+        end_effector_position = T_0_ee[:3, 3]
+
+        return end_effector_position
 
     def fk_front_right(self, theta1, theta2, theta3):
-        raise NotImplementedError()
+        rotation_x, rotation_y, rotation_z, translation = (
+            self.rotation_x,
+            self.rotation_y,
+            self.rotation_z,
+            self.translation,
+        )
+
+        # T_0_1 (base_link to leg_front_l_1)
+        T_0_1 = (
+            translation(0.07500, -0.04450, 0) @ rotation_x(1.57080) @ rotation_z(theta1)
+        )
+
+        # T_1_2 (leg_front_l_1 to leg_front_l_2)
+        T_1_2 = translation(0, 0, 0.039) @ rotation_y(-1.57080) @ rotation_z(theta2)
+
+        # T_2_3 (leg_front_l_2 to leg_front_l_3)
+        T_2_3 = (
+            translation(0, -0.0494, 0.0685) @ rotation_y(1.57080) @ rotation_z(theta3)
+        )
+
+        # T_3_ee (leg_front_l_3 to end-effector)
+        T_3_ee = translation(0.06231, -0.06216, 0.018)
+
+        T_0_ee = T_0_1 @ T_1_2 @ T_2_3 @ T_3_ee
+
+        end_effector_position = T_0_ee[:3, 3]
+
+        return end_effector_position
 
     def fk_back_left(self, theta1, theta2, theta3):
-        raise NotImplementedError()
+        rotation_x, rotation_y, rotation_z, translation = (
+            self.rotation_x,
+            self.rotation_y,
+            self.rotation_z,
+            self.translation,
+        )
+
+        # T_0_1 (base_link to leg_back_l_1)
+        T_0_1 = (
+            translation(-0.07500, 0.03350, 0)
+            @ rotation_x(1.57080)
+            @ rotation_z(-theta1)
+        )
+
+        # T_1_2 (leg_back_l_1 to leg_back_l_2)
+        T_1_2 = translation(0, 0, -0.039) @ rotation_y(-1.57080) @ rotation_z(theta2)
+
+        # T_2_3 (leg_back_l_2 to leg_back_l_3)
+        T_2_3 = (
+            translation(0, -0.0494, 0.0685) @ rotation_y(1.57080) @ rotation_z(-theta3)
+        )
+
+        # T_3_ee (leg_back_l_3 to end-effector)
+        T_3_ee = translation(0.06231, -0.06216, -0.018)
+
+        T_0_ee = T_0_1 @ T_1_2 @ T_2_3 @ T_3_ee
+
+        end_effector_position = T_0_ee[:3, 3]
+
+        return end_effector_position
 
     def fk_back_right(self, theta1, theta2, theta3):
-        raise NotImplementedError()
+        rotation_x, rotation_y, rotation_z, translation = (
+            self.rotation_x,
+            self.rotation_y,
+            self.rotation_z,
+            self.translation,
+        )
+
+        # T_0_1 (base_link to leg_back_r_1)
+        T_0_1 = (
+            translation(-0.07500, -0.03350, 0)
+            @ rotation_x(1.57080)
+            @ rotation_z(theta1)
+        )
+
+        # T_1_2 (leg_back_r_1 to leg_back_r_2)
+        T_1_2 = translation(0, 0, 0.039) @ rotation_y(-1.57080) @ rotation_z(theta2)
+
+        # T_2_3 (leg_back_r_2 to leg_back_r_3)
+        T_2_3 = (
+            translation(0, -0.0494, 0.0685) @ rotation_y(1.57080) @ rotation_z(theta3)
+        )
+
+        # T_3_ee (leg_back_r_3 to end-effector)
+        T_3_ee = translation(0.06231, -0.06216, 0.018)
+
+        # Compute the final transformation
+        T_0_ee = T_0_1 @ T_1_2 @ T_2_3 @ T_3_ee
+
+        # Extract the end-effector position
+        end_effector_position = T_0_ee[:3, 3]
+
+        return end_effector_position
 
 
 _legs = LegKinematics()
@@ -71,8 +229,14 @@ def bl_leg_fk(theta):
 LEG_FK = [fr_leg_fk, fl_leg_fk, br_leg_fk, bl_leg_fk]
 
 
-def inverse_kinematics(leg_fk, target_ee, initial_guess=(0, 0, 0),
-                       learning_rate=None, max_iterations=None, tolerance=None):
+def inverse_kinematics(
+    leg_fk,
+    target_ee,
+    initial_guess=(0, 0, 0),
+    learning_rate=None,
+    max_iterations=None,
+    tolerance=None,
+):
     """Joint angles that put leg_fk's foot at target_ee, found by gradient descent.
 
     leg_fk is one of the FK functions above, so the same solver works for every leg.
@@ -116,20 +280,20 @@ def inverse_kinematics(leg_fk, target_ee, initial_guess=(0, 0, 0),
     return theta
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     np.set_printoptions(precision=4, suppress=True)
-    names = ['front right', 'front left', 'back right', 'back left']
+    names = ["front right", "front left", "back right", "back left"]
 
-    print('Foot positions at the zero pose (compare with lab 2):')
+    print("Foot positions at the zero pose (compare with lab 2):")
     for name, leg_fk in zip(names, LEG_FK):
-        print(f'  {name:12s} {leg_fk(np.zeros(3))}')
+        print(f"  {name:12s} {leg_fk(np.zeros(3))}")
 
     # IK round trip: pick reachable angles, ask IK to find the foot position they give.
     # A few millimeters of error or less means IK is working.
-    print('IK round trip (walking.py settings, from the zero pose):')
+    print("IK round trip (walking.py settings, from the zero pose):")
     goal_angles = np.array([0.1, 0.4, -0.8])
     for name, leg_fk in zip(names, LEG_FK):
         target = leg_fk(goal_angles)
         theta = inverse_kinematics(leg_fk, target, max_iterations=100, tolerance=1e-4)
         error_mm = 1000 * np.linalg.norm(leg_fk(theta) - target)
-        print(f'  {name:12s} foot error {error_mm:.2f} mm')
+        print(f"  {name:12s} foot error {error_mm:.2f} mm")
