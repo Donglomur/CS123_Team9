@@ -250,9 +250,6 @@ class ForwardKinematics(Node):
             self.translation,
         )
 
-        ## TODO: Implement the forward kinematics of the back-right leg, following the same
-        ## structure as fk_front_left (T_0_1, T_1_2, T_2_3, T_3_ee, T_0_ee). See the hip origin table above.
-
         # T_0_1 (base_link to leg_back_r_1)
         T_0_1 = translation(-0.07500, -0.03350, 0) @ rotation_x(1.57080) @ rotation_z(theta1)
 
