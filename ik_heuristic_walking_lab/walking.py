@@ -69,30 +69,42 @@ class InverseKinematics(Node):
         # TODO 7: Implement each leg's trajectory in the trotting gait.
         rf_ee_offset = np.array([0.06, -0.09, 0])
         rf_ee_triangle_positions = np.array([
-            ################################################################################################
-            # TODO 7: Implement the trotting gait
-            ################################################################################################
+            touch_down_position,
+            stand_position_1,
+            stand_position_2,
+            stand_position_3,
+            liftoff_position,
+            mid_swing_position,
         ]) + rf_ee_offset
 
         lf_ee_offset = np.array([0.06, 0.09, 0])
         lf_ee_triangle_positions = np.array([
-            ################################################################################################
-            # TODO 7: Implement the trotting gait
-            ################################################################################################
+            stand_position_3,
+            liftoff_position,
+            mid_swing_position,
+            touch_down_position,
+            stand_position_1,
+            stand_position_2,
         ]) + lf_ee_offset
 
         rb_ee_offset = np.array([-0.11, -0.09, 0])
         rb_ee_triangle_positions = np.array([
-            ################################################################################################
-            # TODO 7: Implement the trotting gait
-            ################################################################################################
+            stand_position_3,
+            liftoff_position,
+            mid_swing_position,
+            touch_down_position,
+            stand_position_1,
+            stand_position_2,
         ]) + rb_ee_offset
 
         lb_ee_offset = np.array([-0.11, 0.09, 0])
         lb_ee_triangle_positions = np.array([
-            ################################################################################################
-            # TODO 7: Implement the trotting gait
-            ################################################################################################
+            touch_down_position,
+            stand_position_1,
+            stand_position_2,
+            stand_position_3,
+            liftoff_position,
+            mid_swing_position,
         ]) + lb_ee_offset
 
         self.ee_triangle_positions = [rf_ee_triangle_positions, lf_ee_triangle_positions, rb_ee_triangle_positions, lb_ee_triangle_positions]
@@ -131,8 +143,14 @@ class InverseKinematics(Node):
         # Unlike in ik.py, t is a float between 0 and 1 covering one full gait cycle, and each leg has
         # six keyframes instead of three.
         ################################################################################################
-
-        return
+        keyframes = self.ee_triangle_positions[leg_index]
+        n = len(keyframes)
+        t_scaled = (t % 1.0) * n
+        segment = int(t_scaled) % n
+        frac = t_scaled - int(t_scaled)
+        p0 = keyframes[segment]
+        p1 = keyframes[(segment + 1) % n]
+        return (1 - frac) * p0 + frac * p1
 
     def cache_target_joint_positions(self):
         # Calculate and store the target joint positions for a cycle and all 4 legs
