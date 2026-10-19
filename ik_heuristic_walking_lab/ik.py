@@ -73,7 +73,12 @@ class InverseKinematics(Node):
         ################################################################################################
         # TODO 5: Implement the interpolation function
         ################################################################################################
-        return
+        t_mod = t % 3.0
+        segment = int(t_mod)
+        frac = t_mod - segment
+        p0 = self.ee_triangle_positions[segment % 3]
+        p1 = self.ee_triangle_positions[(segment + 1) % 3]
+        return p0 + frac * (p1 - p0)
 
     def ik_timer_callback(self):
         if self.joint_positions is not None:
@@ -85,6 +90,7 @@ class InverseKinematics(Node):
             ################################################################################################
             # TODO 6: Implement the time update
             ################################################################################################
+            self.t += self.ik_timer_period
 
             self.get_logger().info(f'Target EE: {target_ee}, Current EE: {current_ee}, Target Angles: {self.target_joint_positions}, Target Angles to EE: {fr_leg_fk(self.target_joint_positions)}, Current Angles: {self.joint_positions}')
 
