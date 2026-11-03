@@ -46,7 +46,7 @@ LOCK_GATE = 0.12
 # y of the box's bottom edge to the 572 px frame:
 #     STOP_BOTTOM = y_bottom / screenshot_height * IMAGE_HEIGHT
 # ========== YOUR CODE HERE: Step 4: measure the stop distance ==========
-STOP_BOTTOM = None  # px -- measure it (see above)
+STOP_BOTTOM = 353  # px -- measure it (see above)
 # =======================================================================
 # Closer to STOP_BOTTOM than this and we stand still: the box jitters by a
 # few pixels every frame, and a robot that shuffles back and forth to chase
@@ -112,7 +112,8 @@ def position_distance(detection, position):
     # ========== YOUR CODE HERE: Step 3: position_distance ==========
     # The straight-line (Euclidean) distance between box_position(detection)
     # and position. Both are fractions of the image, so compare them directly.
-    raise NotImplementedError
+    box_pos = box_position(detection)
+    return ((box_pos[0] - position[0])**2 + (box_pos[1] - position[1])**2)**(1/2)
     # ===============================================================
 
 
@@ -142,7 +143,11 @@ def pick_target(targets, lock):
     #      the nearest one. Nobody that close? None.
     # Tip: min(people, key=lambda d: position_distance(d, lock.position))
     # is the nearest of a non-empty list.
-    raise NotImplementedError
+    if lock.position is None:
+        return min(targets, key=lambda target: abs(box_offset(target)))
+    else:
+        target = min(targets, key=lambda target: position_distance(target, lock.position))
+        return target if position_distance(target, lock.position) <= LOCK_GATE else None
     # =========================================================
 
 
@@ -157,7 +162,7 @@ def remember(lock, detection):
     """
     # ========== YOUR CODE HERE: Step 3: remember ==========
     # lock.position = where the detection is (box_position).
-    raise NotImplementedError
+    lock.position = box_position(detection)
     # ======================================================
     if USE_COLOR:
         remember_color(lock, detection)  # Optional Step 5
@@ -185,7 +190,11 @@ def approach_speed(target_bottom, max_forward):
     # stand still. Otherwise a proportional command that reaches
     # max_forward at SLOWDOWN_PX of error, max_forward * error / SLOWDOWN_PX,
     # clamped to [-MAX_BACKUP_VEL, max_forward].
-    raise NotImplementedError
+    error = STOP_BOTTOM - target_bottom
+    if abs(error) <= STOP_TOLERANCE:
+        return 0.0
+    else:
+        return max(-MAX_BACKUP_VEL, min(max_forward, max_forward * error / SLOWDOWN_PX))
     # ============================================================
 
 
