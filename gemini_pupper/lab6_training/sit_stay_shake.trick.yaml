@@ -1,0 +1,16 @@
+# sit_stay_shake (Part 5): our clip library (sit_down, sit_idle, shake_left,
+# shake_right, stand_up), trained as one tracking policy.
+description: >-
+  Sits down and stays sitting until asked for something else. While it sits it
+  can shake its left or right front paw on request, and stand back up. Start from
+  standing. Use it for "sit", "stay", "shake", or "give me your paw".
+type: policy
+policy: policy.json
+start_pose: standing
+end_pose: sitting
+max_body_angle_deg: 60   # the sit leans back about 35 degrees
+actions:
+  shake_left: Lifts Pupper's own left front paw and shakes it twice, then keeps sitting.
+  shake_right: Lifts Pupper's own right front paw and shakes it twice, then keeps sitting.
+  stand_up: Stands back up from sitting and leaves the trick, ready to walk.
+exit_clip: stand_up

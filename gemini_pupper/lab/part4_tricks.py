@@ -68,7 +68,19 @@ async def play_trick(robot: Robot, name: str) -> Result:
     # QUEUE IT:
     # 4. Decide then: which state is Pupper in once the job is done? (Read the card above.)
     # 5. return with_note(note, await robot.queue(f"trick {name}", job, trick.total_time, then=...))
-    return not_written("TODO 7", "play_trick in lab/part4_tricks.py")
+    trick = robot.tricks.get(name)
+    if trick is None:
+        return Result(False, f"unknown trick '{name}'; available: {list(robot.tricks)}")
+    note = await prepare_to_move(robot)
+    if trick.kind == "reference":  # optional: the jump, played by the locomotion policy itself
+        job = lambda: robot.play_reference_trick(trick)  # noqa: E731
+        then = LOCOMOTION
+    else:
+        job = lambda: play_policy_trick(robot, trick)  # noqa: E731
+        # Once the job is done: a playback trick that ends standing hands the legs back
+        # to locomotion; an interactive trick stays in itself; any other holds its pose.
+        then = LOCOMOTION if (not trick.interactive and trick.end_pose == "standing") else trick
+    return with_note(note, await robot.queue(f"trick {name}", job, trick.total_time, then=then))
     # ====================================
 
 
@@ -148,8 +160,14 @@ async def play_policy_trick(robot: Robot, trick: Trick) -> Result:
 # ========== TODO 8: YOUR CODE HERE ==========
 @tool(
     "play_trick",
-    "TODO 8: describe play_trick for Gemini." + PREPARES_MOVE + "\nTricks:\n{tricks}",
-    name=Param("string", "TODO 8", enum=TRICK_NAMES),
+    "Play one of Pupper's tricks by name. Each trick below says whether it starts"
+    " standing or lying down: get into that pose first (stand_up or lie_down), then play"
+    " it. A trick keeps its final pose until the next motion, and the reply says which"
+    " pose that is. An interactive trick (like sit_stay_shake) keeps running until you"
+    " call one of its interactive actions or any other motion. Only play tricks from"
+    " this list; for anything else, say Pupper doesn't know that trick." + PREPARES_MOVE
+    + "\nTricks:\n{tricks}",
+    name=Param("string", "The trick's name, exactly as listed under Tricks.", enum=TRICK_NAMES),
 )
 # ====================================
 async def play_trick_tool(robot: Robot, name: str) -> Result:

@@ -75,6 +75,7 @@ from std_srvs.srv import Trigger
 from spawn_controllers import LOADED, spawn
 from tricks import TRICK_FADE_S, TRICK_INIT_S, WALK_CONTROLLER, WALK_READY_S, Trick, load_tricks, reference_message_data
 
+
 log = logging.getLogger("robot_api")
 
 # The locomotion controller Gemini drives: gemini_walk, the course default policy

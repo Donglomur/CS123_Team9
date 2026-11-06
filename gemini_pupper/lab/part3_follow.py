@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from robot_api import Result, Robot, not_written  # noqa: F401
 from tool_registry import Param, tool
+from tricks import Trick
 
 
 # ============================================================ what the robot does
@@ -52,7 +53,11 @@ async def prepare_to_move(robot: Robot) -> str:
     # 2. Turn the person follower off: await robot.stop_following()
     # 3. Stand still (the follower may have been walking): robot.send_speed(0, 0, 0)
     # 4. Return the note Gemini will read, e.g. "Stopped following the person first."
-    return ""  # for now: following never ends
+    if not robot.following:
+        return ""
+    await robot.stop_following()
+    robot.send_speed(0, 0, 0)  # the follower may have been walking: stand still
+    return "Stopped following the person first."
     # ====================================
 
 
@@ -70,11 +75,21 @@ async def prepare_to_move(robot: Robot) -> str:
 # ========== TODO 6: YOUR CODE HERE ==========
 @tool(
     "follow",
-    "TODO 6: describe the follow tool for Gemini.",
-    enabled=Param("boolean", "TODO 6"),
+    "Turn follow mode on or off. While it is on, Pupper walks after the nearest person"
+    " it can see. Talking and questions keep follow mode on. Any motion tool (move, turn,"
+    " arc, play_trick, interactive_action, stand_up, lie_down) ends it; before you call"
+    " one, tell the person, e.g. \"Let me stop following you and ...\". To stop following"
+    " without moving, call follow with enabled=false. Pupper cannot follow while it is in"
+    " a trick (sitting, or a spider): it has to stand up first.",
+    enabled=Param("boolean", "true starts following the nearest person; false stops following and stands still."),
 )
 async def follow_tool(robot: Robot, enabled: bool) -> Result:
-    # One line: robot.set_following(enabled) (provided) starts or stops following, and
-    # returns the Result Gemini should hear. Await it and return it.
-    return not_written("TODO 6", "follow in lab/part3_follow.py")
+    # In a trick (sit_stay_shake, the spider) the person follower would yank Pupper out
+    # of it: set_following switches straight to the locomotion controller. Refuse, and
+    # say what to do instead, so Gemini can explain it (Q16).
+    state = robot.state_after_queue
+    if enabled and isinstance(state, Trick):
+        return Result(False, f"can't follow while in {state.name} ({state.end_pose}): "
+                             f"stand up first, then ask to follow")
+    return await robot.set_following(enabled)
 # ====================================

@@ -1,0 +1,24 @@
+# spider_walk (Part 6): our spider clip library (spider_down, spider_idle,
+# spider_up) plus the Mjlab-SpiderWalk walking policy that holds the stance.
+description: >-
+  Lies down into a low, wide spider stance with the legs splayed, and stays in
+  it. While it is a spider, move, turn and arc walk like a spider, slowly and
+  close to the ground. It cannot follow anyone or run as a spider. spider_up
+  stands it back up; any other trick or stand_up also leaves the spider first.
+  Start from standing.
+type: policy
+policy: policy.json
+start_pose: standing
+end_pose: spider
+max_body_angle_deg: 60
+actions:
+  spider_up: Wiggles its legs, pushes back up to standing, and leaves the spider trick.
+exit_clip: spider_up
+walk:                      # it walks in its stance: move, turn and arc drive this policy
+  policy: walk_policy.json
+  speed: 0.1               # default m/s for move and arc
+  max_forward: 0.15        # m/s; trained for at most 0.15
+  max_sideways: 0.1        # m/s; trained for at most 0.1
+  turn: 30                 # deg/s; trained for at most 34
+  run: false
+  note: Walking as a spider is slow and low to the ground, and a little slower than asked.
